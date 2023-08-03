@@ -46,6 +46,7 @@ const initialState = {
   deposit: 150,
   withdraw: 50,
   hasLoan: false, 
+  requestLoan: 5000,
 };
 
 function reducer(state, action) {
@@ -81,13 +82,39 @@ function reducer(state, action) {
         withdraw: action.payload,
       }
     
+    case 'requestLoan': 
+      return {
+        ...state,
+        balance: state.balance + state.requestLoan,
+        loan: state.loan + state.requestLoan,
+        hasLoan: true,
+      }
+    
+    case 'changeRequestLoan':
+      return {
+        ...state,
+        requestLoan: action.payload
+      }
+    
+    case 'payLoan':
+      return {
+        ...state,
+        loan: 0,
+        balance: state.balance - state.loan,
+        hasLoan: false,
+      }
+    
+    case 'closeAccount': 
+      return initialState
+    
     default:
       throw new Error("Action unknown");
 }
 }
 
 export default function App() {
-  const [{ balance, loan, isActive, deposit, withdraw}, dispatch] = useReducer(reducer, initialState);
+  const [{ balance, loan, isActive, deposit, withdraw, hasLoan, requestLoan}, dispatch] = useReducer(reducer, initialState);
+  const canCloseAccount = isActive && balance === 0 && loan === 0;
 
   return (
     <div className="App">
@@ -104,11 +131,15 @@ export default function App() {
         <input
           disabled={!isActive}
           value={deposit}
-          onChange={(e) =>
-            dispatch({
-              type: 'changeDepositValue',
-              payload: Number(e.target.value)
-            })} />
+          onChange={(e) => { 
+            if (!isNaN(Number(e.target.value))) {
+              dispatch({
+                type: 'changeDepositValue',
+                payload: Number(e.target.value)
+              })
+            }
+          }
+        } />
         <button
           onClick={() => dispatch({ type: 'deposit' })}
           disabled={!isActive}>
@@ -120,11 +151,13 @@ export default function App() {
       <input
           disabled={!isActive}
           value={withdraw}
-          onChange={(e) =>
-            dispatch({
-              type: 'changeWithdrawValue',
-              payload: Number(e.target.value)
-            })} />
+          onChange={(e) => {
+            if (!isNaN(Number(e.target.value))) {
+              dispatch({
+                type: 'changeWithdrawValue',
+                payload: Number(e.target.value)
+              })
+            }}} />
         <button onClick={() => dispatch({type: 'withdraw'})} disabled={!isActive}>
           Withdraw 50
         </button>
@@ -132,17 +165,28 @@ export default function App() {
 
 
       <p>
-        <button onClick={() => {}} disabled={!isActive}>
-          Request a loan of 5000
+        <input
+          disabled={!isActive || hasLoan}
+          value={requestLoan}
+          onChange={(e) => {
+            if (!isNaN(Number(e.target.value))) {
+              dispatch({
+                type: 'changeRequestLoan',
+                payload: Number(e.target.value) || 0
+              })
+            }
+          }}/>
+        <button onClick={() => dispatch({type: 'requestLoan'})} disabled={!isActive || hasLoan}>
+          Request a loan of { requestLoan }
         </button>
       </p>
       <p>
-        <button onClick={() => {}} disabled={!isActive}>
+        <button onClick={() => dispatch({type: "payLoan"})} disabled={!isActive}>
           Pay loan
         </button>
       </p>
       <p>
-        <button onClick={() => {}} disabled={!isActive}>
+        <button onClick={() => dispatch({type: "closeAccount"})} disabled={!canCloseAccount}>
           Close account
         </button>
       </p>
