@@ -159,7 +159,7 @@ export default function App() {
               })
             }}} />
         <button onClick={() => dispatch({type: 'withdraw'})} disabled={!isActive}>
-          Withdraw 50
+          Withdraw {withdraw}
         </button>
       </p>
 
